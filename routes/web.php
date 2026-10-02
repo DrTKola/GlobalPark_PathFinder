@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,5 +15,19 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+})->name('home');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])
+        ->middleware('throttle:6,1')
+        ->name('login.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
